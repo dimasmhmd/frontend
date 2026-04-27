@@ -1,0 +1,169 @@
+// frontend/src/App.jsx
+import React, { useState, useEffect, useMemo } from 'react';
+import { Layout } from './components/Layout';
+import { Dashboard } from './pages/Dashboard';
+import { Analytics } from './pages/Analytics';
+import { Forecast } from './pages/Forecast';
+import { DataManagement } from './pages/DataManagement';
+import { Login } from './pages/Login';
+import { ManageUserModal } from './components/ManageUserModal';
+import { ChatAssistantModal } from './components/ChatAssistantModal';
+
+function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+
+  const [isManageUserModalOpen, setIsManageUserModalOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false); // <-- TAMBAHKAN STATE INI
+
+
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [data, setData] = useState({ products: [], customers: [], sales: [], fiscalYears: [] });
+  const [loading, setLoading] = useState(true);
+  
+  const currentYear = new Date().getFullYear().toString();
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+  const [selectedRegion, setSelectedRegion] = useState('Semua Region');
+  const [selectedCategory, setSelectedCategory] = useState('Semua Kategori');
+
+  // Mengembalikan fitur auto-login session
+  useEffect(() => {
+    const savedUser = sessionStorage.getItem('sales_app_user');
+    if (savedUser) {
+      setCurrentUser(JSON.parse(savedUser));
+      setIsAuthenticated(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    // Hanya fetch jika sudah ter-autentikasi
+    if (!isAuthenticated) return; 
+    setLoading(true); 
+    
+    // Secara default, akan selalu mencoba fetch ke Backend Node.js Anda
+    fetch(import.meta.env.VITE_API_URL + `/api/dashboard?year=All`)
+      .then(res => res.json())
+      .then(dbData => { setData(dbData); setLoading(false); })
+      .catch(err => {
+        // FALLBACK DEMO: Karena di preview Canvas ini tidak ada server Node.js,
+        // kita menggunakan mock data agar preview tetap berfungsi. 
+        // Di aplikasi VS Code Anda, peringatan ini akan muncul jika backend mati.
+        console.warn("Backend tidak terhubung. Menggunakan data simulasi (Mock) untuk Demo.");
+        setData(generateMockData());
+        setLoading(false);
+      });
+  }, [isAuthenticated]); 
+
+  const filterOptions = useMemo(() => {
+    if (!data.sales) return { regions: [], categories: [] };
+    return { 
+      regions: [...new Set(data.sales.map(s => s.region))].sort(), 
+      categories: [...new Set(data.sales.map(s => s.category))].sort() 
+    };
+  }, [data]);
+
+  const filteredData = useMemo(() => {
+    if (!data.sales) return data;
+    let filteredSales = data.sales;
+    if (selectedYear !== 'All') filteredSales = filteredSales.filter(s => new Date(s.salesDate).getFullYear().toString() === selectedYear);
+    if (selectedRegion !== 'Semua Region') filteredSales = filteredSales.filter(s => s.region === selectedRegion);
+    if (selectedCategory !== 'Semua Kategori') filteredSales = filteredSales.filter(s => s.category === selectedCategory);
+    return { ...data, sales: filteredSales };
+  }, [data, selectedYear, selectedRegion, selectedCategory]);
+
+  const prevYearData = useMemo(() => {
+    if (selectedYear === 'All' || !data.sales) return null;
+    const pYear = (parseInt(selectedYear) - 1).toString();
+    let pSales = data.sales.filter(s => new Date(s.salesDate).getFullYear().toString() === pYear);
+    if (selectedRegion !== 'Semua Region') pSales = pSales.filter(s => s.region === selectedRegion);
+    if (selectedCategory !== 'Semua Kategori') pSales = pSales.filter(s => s.category === selectedCategory);
+    return { revenue: pSales.reduce((sum, i) => sum + i.totalAmount, 0), tx: pSales.length, year: pYear };
+  }, [data, selectedYear, selectedRegion, selectedCategory]);
+
+  // LOGIN PAGE GATE
+  if (!isAuthenticated) {
+    return <Login onLoginSuccess={(u) => { setCurrentUser(u); setIsAuthenticated(true); sessionStorage.setItem('sales_app_user', JSON.stringify(u)); }} />;
+  }
+
+  // TAMPILAN LOADING DATA DARI DB
+  if (loading && data.sales.length === 0) { 
+    return (
+      <div className="h-screen w-screen flex flex-col items-center justify-center bg-slate-50">
+         <div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full mb-4"></div>
+         <p className="text-slate-500 font-medium">Mempersiapkan Workspace dari Database...</p>
+      </div>
+    );
+  }
+
+  return (
+    <>
+    <Layout 
+      activeTab={activeTab} 
+      setActiveTab={setActiveTab} 
+      onDownloadReport={() => {}} 
+      user={currentUser} 
+      onLogout={() => { 
+        setCurrentUser(null); 
+        setIsAuthenticated(false); 
+        sessionStorage.removeItem('sales_app_user'); 
+      }}
+      onOpenManageUser={() => setIsManageUserModalOpen(true)} 
+      onOpenChat={() => setIsChatOpen(true)}
+    >
+      
+      <div className="shrink-0 bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-4 relative z-10 w-full">
+        <div className="flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-8 w-full">
+          <div className="flex items-center gap-2 text-slate-700 shrink-0">
+             <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+             <span className="font-bold text-sm">Global Filter</span>
+          </div>
+          <div className="hidden md:block w-px h-8 bg-slate-200"></div>
+
+          <div className="flex flex-col sm:flex-row gap-4 w-full">
+            <div className="flex flex-col gap-1 w-full sm:w-auto">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Fiscal Year</label>
+              <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)} className="appearance-none border border-slate-200 rounded-lg px-4 py-2 text-sm font-semibold text-slate-700 bg-slate-50 focus:ring-2 focus:ring-blue-500 outline-none w-full cursor-pointer">
+                <option value="All">Semua Tahun</option>
+                {data.fiscalYears?.map((year, i) => <option key={i} value={year}>{year}</option>)}
+              </select>
+            </div>
+            <div className="flex flex-col gap-1 w-full sm:w-auto">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Region</label>
+              <select value={selectedRegion} onChange={(e) => setSelectedRegion(e.target.value)} className="appearance-none border border-slate-200 rounded-lg px-4 py-2 text-sm font-semibold text-slate-700 bg-slate-50 focus:ring-2 focus:ring-blue-500 outline-none w-full cursor-pointer">
+                <option value="Semua Region">Semua Region</option>
+                {filterOptions.regions.map((region, i) => <option key={i} value={region}>{region}</option>)}
+              </select>
+            </div>
+            <div className="flex flex-col gap-1 w-full sm:w-auto">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Kategori</label>
+              <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="appearance-none border border-slate-200 rounded-lg px-4 py-2 text-sm font-semibold text-slate-700 bg-slate-50 focus:ring-2 focus:ring-blue-500 outline-none w-full cursor-pointer">
+                <option value="Semua Kategori">Semua Kategori</option>
+                {filterOptions.categories.map((cat, i) => <option key={i} value={cat}>{cat}</option>)}
+              </select>
+            </div>
+          </div>
+        </div>
+        <button onClick={() => {setSelectedYear(currentYear); setSelectedRegion('Semua Region'); setSelectedCategory('Semua Kategori');}} className="shrink-0 w-full lg:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm px-6 py-2.5 rounded-lg shadow-sm transition-colors mt-2 lg:mt-0">Reset</button>
+      </div>
+
+      {/* DYNAMIC ROUTING */}
+      <div className="flex-1 w-full min-h-0 flex flex-col relative z-0">
+        {activeTab === 'dashboard' && <Dashboard data={filteredData} loading={loading} selectedYear={selectedYear} prevYearData={prevYearData} />}
+        {activeTab === 'analytics' && <Analytics data={filteredData} loading={loading} />}
+        {activeTab === 'forecast' && <Forecast data={filteredData} loading={loading} />}
+        {activeTab === 'data' && <DataManagement data={filteredData} loading={loading} />}
+      </div>
+    </Layout>
+
+    {/* RENDER MODAL DI LUAR LAYOUT */}
+    <ManageUserModal 
+      isOpen={isManageUserModalOpen} 
+      onClose={() => setIsManageUserModalOpen(false)} 
+    />
+      
+	  <ChatAssistantModal isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
+    </>
+  );
+}
+
+export default App;
