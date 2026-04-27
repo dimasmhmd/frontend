@@ -22,6 +22,7 @@ export const Login = ({ onLoginSuccess }) => {
       const data = await response.json();
 
       if (response.ok) {
+        sessionStorage.setItem('sales_app_token', data.token); 
         onLoginSuccess(data.user);
       } else {
         setErrorMsg(data.error || 'Login gagal. Periksa username dan password Anda.');

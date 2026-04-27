@@ -19,10 +19,19 @@ export const ManageUserModal = ({ isOpen, onClose }) => {
   const fetchUsers = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(import.meta.env.VITE_API_URL + '/api/users');
+      const token = sessionStorage.getItem('sales_app_token'); // <-- AMBIL TOKEN
+      
+      const response = await fetch(import.meta.env.VITE_API_URL + '/api/users', {
+        headers: {
+          'Authorization': `Bearer ${token}`, // <-- SISIPKAN TOKEN
+          'Content-Type': 'application/json'
+        }
+      });
       const data = await response.json();
       if (response.ok) {
         setUsers(data.users);
+      } else {
+        console.error('API Error:', data.error);
       }
     } catch (error) {
       console.error('Gagal fetch users:', error);
@@ -44,8 +53,13 @@ export const ManageUserModal = ({ isOpen, onClose }) => {
   const handleDeleteClick = async (id) => {
     if (window.confirm('Apakah Anda yakin ingin menghapus pengguna ini?')) {
       try {
+        const token = sessionStorage.getItem('sales_app_token'); // <-- AMBIL TOKEN
+        
         const response = await fetch(import.meta.env.VITE_API_URL + `/api/users/${id}`, {
-          method: 'DELETE'
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}` // <-- SISIPKAN TOKEN
+          }
         });
         
         if (response.ok) {
@@ -65,12 +79,17 @@ export const ManageUserModal = ({ isOpen, onClose }) => {
     setIsLoading(true);
     
     try {
+      const token = sessionStorage.getItem('sales_app_token'); // <-- AMBIL TOKEN
+      
       const url = formData.id ? import.meta.env.VITE_API_URL + `/api/users/${formData.id}` : import.meta.env.VITE_API_URL + '/api/users';
       const method = formData.id ? 'PUT' : 'POST';
 
       const response = await fetch(url, {
         method: method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` // <-- SISIPKAN TOKEN
+        },
         body: JSON.stringify(formData)
       });
 

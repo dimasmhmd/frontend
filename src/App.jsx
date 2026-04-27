@@ -10,12 +10,13 @@ import { ManageUserModal } from './components/ManageUserModal';
 import { ChatAssistantModal } from './components/ChatAssistantModal';
 
 function App() {
+  const token = sessionStorage.getItem('sales_app_token');
+  
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
 
   const [isManageUserModalOpen, setIsManageUserModalOpen] = useState(false);
-  const [isChatOpen, setIsChatOpen] = useState(false); // <-- TAMBAHKAN STATE INI
-
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   const [activeTab, setActiveTab] = useState('dashboard');
   const [data, setData] = useState({ products: [], customers: [], sales: [], fiscalYears: [] });
@@ -29,7 +30,8 @@ function App() {
   // Mengembalikan fitur auto-login session
   useEffect(() => {
     const savedUser = sessionStorage.getItem('sales_app_user');
-    if (savedUser) {
+    const savedToken = sessionStorage.getItem('sales_app_token');
+    if (savedUser && savedToken) {
       setCurrentUser(JSON.parse(savedUser));
       setIsAuthenticated(true);
     }
@@ -40,19 +42,36 @@ function App() {
     if (!isAuthenticated) return; 
     setLoading(true); 
     
-    // Secara default, akan selalu mencoba fetch ke Backend Node.js Anda
-    fetch(import.meta.env.VITE_API_URL + `/api/dashboard?year=All`)
-      .then(res => res.json())
-      .then(dbData => { setData(dbData); setLoading(false); })
+    // Secara default, akan selalu mencoba fetch ke Backend Node.js Anda dengan membawa Token
+    fetch(import.meta.env.VITE_API_URL + `/api/dashboard?year=All`, {
+      headers: {
+        'Authorization': `Bearer ${token}`, // <-- PENTING: Token JWT disisipkan di sini
+        'Content-Type': 'application/json'
+      }
+    })
+      .then(res => {
+        // Handle jika token kadaluarsa atau tidak valid
+        if (res.status === 401 || res.status === 403) {
+          setCurrentUser(null);
+          setIsAuthenticated(false);
+          sessionStorage.removeItem('sales_app_user');
+          sessionStorage.removeItem('sales_app_token');
+          throw new Error('Sesi kedaluwarsa, silakan login ulang.');
+        }
+        return res.json();
+      })
+      .then(dbData => { 
+        setData(dbData); 
+        setLoading(false); 
+      })
       .catch(err => {
         // FALLBACK DEMO: Karena di preview Canvas ini tidak ada server Node.js,
         // kita menggunakan mock data agar preview tetap berfungsi. 
         // Di aplikasi VS Code Anda, peringatan ini akan muncul jika backend mati.
-        console.warn("Backend tidak terhubung. Menggunakan data simulasi (Mock) untuk Demo.");
-        setData(generateMockData());
+        console.warn("Backend tidak terhubung atau sesi berakhir. Menampilkan fallback jika ada.", err);
         setLoading(false);
       });
-  }, [isAuthenticated]); 
+  }, [isAuthenticated, token]); 
 
   const filterOptions = useMemo(() => {
     if (!data.sales) return { regions: [], categories: [] };
@@ -106,6 +125,7 @@ function App() {
         setCurrentUser(null); 
         setIsAuthenticated(false); 
         sessionStorage.removeItem('sales_app_user'); 
+        sessionStorage.removeItem('sales_app_token'); // Hapus token saat logout
       }}
       onOpenManageUser={() => setIsManageUserModalOpen(true)} 
       onOpenChat={() => setIsChatOpen(true)}
@@ -161,7 +181,7 @@ function App() {
       onClose={() => setIsManageUserModalOpen(false)} 
     />
       
-	  <ChatAssistantModal isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
+    <ChatAssistantModal isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
     </>
   );
 }
