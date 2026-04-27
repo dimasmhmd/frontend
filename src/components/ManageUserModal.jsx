@@ -19,7 +19,7 @@ export const ManageUserModal = ({ isOpen, onClose }) => {
   const fetchUsers = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/api/users');
+      const response = await fetch(import.meta.env.VITE_API_URL + '/api/users');
       const data = await response.json();
       if (response.ok) {
         setUsers(data.users);
@@ -44,7 +44,7 @@ export const ManageUserModal = ({ isOpen, onClose }) => {
   const handleDeleteClick = async (id) => {
     if (window.confirm('Apakah Anda yakin ingin menghapus pengguna ini?')) {
       try {
-        const response = await fetch(`http://localhost:5000/api/users/${id}`, {
+        const response = await fetch(import.meta.env.VITE_API_URL + `/api/users/${id}`, {
           method: 'DELETE'
         });
         
@@ -65,7 +65,7 @@ export const ManageUserModal = ({ isOpen, onClose }) => {
     setIsLoading(true);
     
     try {
-      const url = formData.id ? `http://localhost:5000/api/users/${formData.id}` : 'http://localhost:5000/api/users';
+      const url = formData.id ? import.meta.env.VITE_API_URL + `/api/users/${formData.id}` : import.meta.env.VITE_API_URL + '/api/users';
       const method = formData.id ? 'PUT' : 'POST';
 
       const response = await fetch(url, {
