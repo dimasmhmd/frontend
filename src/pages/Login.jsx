@@ -65,6 +65,13 @@ export const Login = ({ onLoginSuccess }) => {
             <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-blue-600 font-bold text-xl">D</div>
             <h1 className="text-2xl font-bold tracking-tight">Data & AI <span className="text-blue-300">Solution</span></h1>
           </div>
+
+          {/* FIX: Tombol kembali ke Landing Page di bagian branding */}
+          <a href="https://dimasmhmd.qzz.io/" className="inline-flex items-center gap-2 text-blue-200 hover:text-white mb-8 transition-colors text-sm font-medium">
+             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+             Kembali ke Beranda
+          </a>
+
           <h2 className="text-4xl font-bold leading-tight mb-4 mt-20">Sistem Prediksi Penjualan <br/> Cerdas & Akurat.</h2>
           <p className="text-blue-100 text-lg max-w-md">Kelola data transaksi, analisis performa secara real-time, dan gunakan kekuatan Machine Learning untuk memproyeksikan target masa depan Anda.</p>
         </div>

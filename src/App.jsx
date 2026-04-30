@@ -126,6 +126,7 @@ function App() {
         setIsAuthenticated(false); 
         sessionStorage.removeItem('sales_app_user'); 
         sessionStorage.removeItem('sales_app_token'); // Hapus token saat logout
+        window.location.href = 'https://dimasmhmd.qzz.io/';
       }}
       onOpenManageUser={() => setIsManageUserModalOpen(true)} 
       onOpenChat={() => setIsChatOpen(true)}
