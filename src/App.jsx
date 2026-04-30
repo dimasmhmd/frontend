@@ -122,11 +122,11 @@ function App() {
       onDownloadReport={() => {}} 
       user={currentUser} 
       onLogout={() => { 
+        window.location.href = 'https://dimasmhmd.qzz.io/';   // Redirect pengguna kembali ke halaman awal (Landing Page) setelah logout
         setCurrentUser(null); 
         setIsAuthenticated(false); 
         sessionStorage.removeItem('sales_app_user'); 
-        sessionStorage.removeItem('sales_app_token'); // Hapus token saat logout
-        window.location.href = 'https://dimasmhmd.qzz.io/';
+        sessionStorage.removeItem('sales_app_token');
       }}
       onOpenManageUser={() => setIsManageUserModalOpen(true)} 
       onOpenChat={() => setIsChatOpen(true)}
