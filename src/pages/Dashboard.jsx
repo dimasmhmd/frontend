@@ -131,7 +131,7 @@ export const Dashboard = ({ data, loading, selectedYear, prevYearData }) => {
       .sort((a, b) => b.value - a.value);
 
     const salesArray = Array.from(map.values());
-    const maxValue = salesArray.length > 0 ? Math.max(...salesArray.map(m => m.actual)) : 0;
+    const maxValue = salesArray.length > 0 ? Math.max(...salesArray.map(m => m.actual)) * 1.25 : 0;
     const g = salesArray.length > 1 ? ((salesArray[salesArray.length-1].actual - salesArray[0].actual) / salesArray[0].actual) * 100 : 12.5;
 
     return {
@@ -260,7 +260,7 @@ export const Dashboard = ({ data, loading, selectedYear, prevYearData }) => {
       </div>
 
       {/* ROW 2: INSIGHT BANNER */}
-      <div className={`shrink-0 bg-indigo-50/70 border border-indigo-100 rounded-xl p-4 flex flex-col xl:flex-row items-start xl:items-center gap-4 xl:gap-6 transition-opacity duration-300 ${loading ? 'opacity-50' : 'opacity-100'}`}>
+      {/* <div className={`shrink-0 bg-indigo-50/70 border border-indigo-100 rounded-xl p-4 flex flex-col xl:flex-row items-start xl:items-center gap-4 xl:gap-6 transition-opacity duration-300 ${loading ? 'opacity-50' : 'opacity-100'}`}>
          <div className="flex items-center gap-2 font-bold text-indigo-700 shrink-0 xl:border-r border-indigo-200 xl:pr-6">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
             Insight Otomatis
@@ -281,7 +281,7 @@ export const Dashboard = ({ data, loading, selectedYear, prevYearData }) => {
                <p>Tidak ada penurunan signifikan di semua region pada periode ini.</p>
             </div>
          </div>
-      </div>
+      </div> */}
 
       {/* ROW 3: CHARTS AREA */}
       <div className={`flex flex-col lg:flex-row flex-1 min-h-0 gap-4 w-full transition-opacity duration-300 ${loading ? 'opacity-50' : 'opacity-100'}`}>
@@ -290,11 +290,17 @@ export const Dashboard = ({ data, loading, selectedYear, prevYearData }) => {
         <Card className="flex flex-col w-full lg:w-[55%] min-h-0 overflow-hidden !p-5 border-white shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)]">
           <div className="flex justify-between items-center shrink-0 mb-4">
             <div>
-               <h3 className="text-sm font-bold text-slate-900">Tren Penjualan Bulanan</h3>
+               {/* <h3 className="text-sm font-bold text-slate-900">Tren Penjualan Bulanan</h3>
                <div className="flex items-center gap-2 mt-1">
                   <div className="w-2 h-2 rounded-full bg-blue-600"></div>
                   <span className="text-[10px] font-bold text-slate-500">Actual {selectedYear === 'All' ? '' : selectedYear}</span>
-               </div>
+               </div> */}
+              <h3 className="text-sm font-bold text-slate-900">
+                Tren Penjualan Bulanan{" "}
+                <span className="text-slate-400 font-medium">
+                  (Actual {selectedYear === 'All' ? '' : selectedYear})
+                </span>
+              </h3>
             </div>
             {loading && <span className="text-xs text-blue-500 animate-pulse">Memuat...</span>}
           </div>
